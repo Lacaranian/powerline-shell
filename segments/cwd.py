@@ -57,25 +57,12 @@ def add_cwd_segment(powerline):
 
     names = split_path_into_names(cwd)
 
-    max_depth = powerline.args.cwd_max_depth
-    if max_depth <= 0:
-        warn("Ignoring --cwd-max-depth argument since it's not greater than 0")
-    elif len(names) > max_depth:
-        # https://github.com/milkbikis/powerline-shell/issues/148
-        # n_before is the number is the number of directories to put before the
-        # ellipsis. So if you are at ~/a/b/c/d/e and max depth is 4, it will
-        # show `~ a ... d e`.
-        #
-        # max_depth must be greater than n_before or else you end up repeating
-        # parts of the path with the way the splicing is written below.
-        n_before = 2 if max_depth > 2 else max_depth - 1
-        names = names[:n_before] + [ELLIPSIS] + names[n_before - max_depth:]
-
     if (powerline.args.cwd_mode == 'dironly' or powerline.args.cwd_only):
         # The user has indicated they only want the current directory to be
         # displayed, so chop everything else off
         names = names[-1:]
 
+    dirname = []
     for i, name in enumerate(names):
         fg, bg = get_fg_bg(name)
 
@@ -85,6 +72,11 @@ def add_cwd_segment(powerline):
         if requires_special_home_display(name) or is_last_dir:
             separator = None
             separator_fg = None
+        if is_last_dir:
+            dirname.append(maybe_shorten_name(powerline, name))
+        else:
+            dirname.append(name[:1])
+    fulldirname = "/".join(dirname)
 
-        powerline.append(' %s ' % maybe_shorten_name(powerline, name), fg, bg,
-                         separator, separator_fg)
+    powerline.append(' %s ' % fulldirname, fg, bg,
+                     separator, separator_fg)
